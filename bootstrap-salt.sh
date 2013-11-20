@@ -1338,7 +1338,22 @@ install_ubuntu_stable() {
     if [ $_INSTALL_SYNDIC -eq $BS_TRUE ]; then
         packages="${packages} salt-syndic"
     fi
+    if [ $_START_DAEMONS -eq $BS_FALSE ]; then
+        if [ ! -f /usr/sbin/policy-rc.d ] || [ ! -h /usr/sbin/policy-rc.d ]; then
+            cat > /usr/sbin/policy-rc.d << "EOF"
+#!/bin/sh
+exit 101
+EOF
+            chmod 755 /usr/sbin/policy-rc.d
+            _START_DAEMONS_INHIBITED="true"
+        else
+            echoerror "Failed to inhibit daemon autostart"
+        fi
+    fi
     __apt_get_install_noinput ${packages} || return 1
+    if [ -n "$_START_DAEMONS_INHIBITED" ]; then
+        rm -f /usr/sbin/policy-rc.d
+    fi
     return 0
 }
 
@@ -1622,7 +1637,22 @@ __install_debian_stable() {
     if [ $_INSTALL_SYNDIC -eq $BS_TRUE ]; then
         packages="${packages} salt-syndic"
     fi
+    if [ $_START_DAEMONS -eq $BS_FALSE ]; then
+        if [ ! -f /usr/sbin/policy-rc.d ] || [ ! -h /usr/sbin/policy-rc.d ]; then
+            cat > /usr/sbin/policy-rc.d << "EOF"
+#!/bin/sh
+exit 101
+EOF
+            chmod 755 /usr/sbin/policy-rc.d
+            _START_DAEMONS_INHIBITED="true"
+        else
+            echoerror "Failed to inhibit daemon autostart"
+        fi
+    fi
     __apt_get_install_noinput ${packages} || return 1
+    if [ -n "$_START_DAEMONS_INHIBITED" ]; then
+        rm -f /usr/sbin/policy-rc.d
+    fi
 
     if [ $_PIP_ALLOWED -eq $BS_TRUE ]; then
         # Building pyzmq from source to build it against libzmq3.
